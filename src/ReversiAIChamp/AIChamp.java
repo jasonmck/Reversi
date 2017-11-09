@@ -26,6 +26,7 @@ public class AIChamp {
 
     double t1, t2;
     int me;
+    int them;
     int boardState;
     int curState[][] = new int[8][8]; // state[0][0] is the bottom left corner of the board (on the GUI)
     int turn = -1;
@@ -36,6 +37,9 @@ public class AIChamp {
 
     public AIChamp(int _me, String host) {
         me = _me;
+        if (me == 1) { them = 2; }
+        if (me == 2) { them = 1; }
+
         initClient(host);
 
         int myMove;
@@ -118,7 +122,13 @@ public class AIChamp {
      * @return
      */
     private float heuristic(int[][] state, int round) {
-        throw new UnsupportedOperationException("Not implemented");
+        int[] tileStateCount = new int[3];
+        for(int[] i : state) {
+            for (int j : i) {
+                tileStateCount[j]++;
+            }
+        }
+        return tileStateCount[me]/tileStateCount[them];
     }
 
     // You should modify this function
