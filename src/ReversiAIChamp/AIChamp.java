@@ -164,13 +164,11 @@ public class AIChamp {
                 }
             }
         }
-
-
-
         //if (round > 3) {
         //    System.out.println("checking out");
         //    System.exit(1);
         //}
+        return validMoves;
     }
 
     /**
