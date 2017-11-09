@@ -26,7 +26,7 @@ public class AIChamp {
     int me;
     int them;
     int boardState;
-    int state[][] = new int[8][8]; // state[0][0] is the bottom left corner of the board (on the GUI)
+    int curState[][] = new int[8][8]; // state[0][0] is the bottom left corner of the board (on the GUI)
     int turn = -1;
     int round;
 
@@ -48,9 +48,9 @@ public class AIChamp {
 
             if (turn == me) {
                 System.out.println("Move");
-                List<Integer> validMoves = getValidMoves(round, state);
+                List<Integer> validMoves = getValidMoves(round, curState);
 
-                myMove = move(state, round, validMoves);
+                myMove = move(curState, round, validMoves);
 
                 //myMove = generator.nextInt(numValidMoves);        // select a move randomly
 
@@ -71,9 +71,9 @@ public class AIChamp {
     /**
      * This is the recursive minimax algorithm with alpha/beta pruning.
      *
-     * @param state the current state
-     * @param round current round
-     * @param depth how far we have recursed down the gametree
+     * @param state        the current state
+     * @param round        current round
+     * @param depth        how far we have recursed down the gametree
      * @param parentchoice what our maximizer/minimizer parent will choose if we do not supply a larger/smaller value
      * @return minimum/maximum child value if we are minimizer/maximizer
      */
@@ -112,7 +112,7 @@ public class AIChamp {
     /**
      * Finds the best move
      *
-     * @param state current state of the game
+     * @param state      current state of the game
      * @param validMoves integers that correspond with indices on the game board
      * @return Game board index that corresponds with the best move
      */
@@ -131,7 +131,6 @@ public class AIChamp {
         }
 
 
-
         throw new UnsupportedOperationException("Not implemented");
         //return moveIdx;
     }
@@ -143,41 +142,44 @@ public class AIChamp {
 
         if (round < 4) {
             if (state[3][3] == 0) {
-                validMoves.add(3*8 + 3);
+                validMoves.add(3 * 8 + 3);
             }
             if (state[3][4] == 0) {
-                validMoves.add(3*8 + 4);
+                validMoves.add(3 * 8 + 4);
             }
             if (state[4][3] == 0) {
-                validMoves.add(4*8 + 3);
+                validMoves.add(4 * 8 + 3);
             }
             if (state[4][4] == 0) {
-                validMoves.add(4*8 + 4);
+                validMoves.add(4 * 8 + 4);
             }
             System.out.println("Valid Moves:");
             for (i = 0; i < validMoves.size(); i++) {
                 System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
             }
-        }
-        else {
+        } else {
             System.out.println("Valid Moves:");
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {
                         if (couldBe(state, i, j)) {
-                            validMoves.add(i*8 + j);
+                            validMoves.add(i * 8 + j);
                             System.out.println(i + ", " + j);
                         }
                     }
                 }
             }
         }
+
+
         //if (round > 3) {
         //    System.out.println("checking out");
         //    System.exit(1);
         //}
         return validMoves;
+
     }
+
 
     /**
      * The original checkDirection from the client
@@ -196,8 +198,8 @@ public class AIChamp {
 
         seqLen = 0;
         for (i = 1; i < 8; i++) {
-            r = row+incy*i;
-            c = col+incx*i;
+            r = row + incy * i;
+            c = col + incx * i;
 
             if ((r < 0) || (r > 7) || (c < 0) || (c > 7))
                 break;
@@ -210,16 +212,15 @@ public class AIChamp {
         for (i = 0; i < seqLen; i++) {
             if (me == 1) {
                 if (sequence[i] == 2)
-                    count ++;
+                    count++;
                 else {
                     if ((sequence[i] == 1) && (count > 0))
                         return true;
                     break;
                 }
-            }
-            else {
+            } else {
                 if (sequence[i] == 1)
-                    count ++;
+                    count++;
                 else {
                     if ((sequence[i] == 2) && (count > 0))
                         return true;
@@ -229,6 +230,24 @@ public class AIChamp {
         }
 
         return false;
+    }
+
+    private int[][] getNewState(int state[][], int row, int col, int turn) {
+        return changeColors(state, row, col, turn);
+    }
+
+    public static int[][] changeColors(int[][] state, int row, int col, int turn) {
+        int incx, incy;
+
+        for (incx = -1; incx < 2; incx++) {
+            for (incy = -1; incy < 2; incy++) {
+                if ((incx == 0) && (incy == 0))
+                    continue;
+
+                state = checkDirection(state, row, col, incx, incy, turn);
+            }
+        }
+        return state;
     }
 
     /**
@@ -241,15 +260,15 @@ public class AIChamp {
      * @param incy
      * @return
      */
-    public static void checkDirection(int[][] state, int row, int col, int incx, int incy, int turn) {
+    public static int[][] checkDirection(int[][] state, int row, int col, int incx, int incy, int turn) {
         int sequence[] = new int[7];
         int seqLen;
         int i, r, c;
 
         seqLen = 0;
         for (i = 1; i < 8; i++) {
-            r = row+incy*i;
-            c = col+incx*i;
+            r = row + incy * i;
+            c = col + incx * i;
 
             if ((r < 0) || (r > 7) || (c < 0) || (c > 7))
                 break;
@@ -262,16 +281,15 @@ public class AIChamp {
         for (i = 0; i < seqLen; i++) {
             if (turn == 0) {
                 if (sequence[i] == 2)
-                    count ++;
+                    count++;
                 else {
                     if ((sequence[i] == 1) && (count > 0))
                         count = 20;
                     break;
                 }
-            }
-            else {
+            } else {
                 if (sequence[i] == 1)
-                    count ++;
+                    count++;
                 else {
                     if ((sequence[i] == 2) && (count > 0))
                         count = 20;
@@ -283,27 +301,28 @@ public class AIChamp {
         if (count > 10) {
             if (turn == 0) {
                 i = 1;
-                r = row+incy*i;
-                c = col+incx*i;
+                r = row + incy * i;
+                c = col + incx * i;
                 while (state[r][c] == 2) {
                     state[r][c] = 1;
                     i++;
-                    r = row+incy*i;
-                    c = col+incx*i;
+                    r = row + incy * i;
+                    c = col + incx * i;
                 }
-            }
-            else {
+            } else {
                 i = 1;
-                r = row+incy*i;
-                c = col+incx*i;
+                r = row + incy * i;
+                c = col + incx * i;
                 while (state[r][c] == 1) {
                     state[r][c] = 2;
                     i++;
-                    r = row+incy*i;
-                    c = col+incx*i;
+                    r = row + incy * i;
+                    c = col + incx * i;
                 }
             }
         }
+
+        return state;
     }
 
     private boolean couldBe(int state[][], int row, int col) {
@@ -347,7 +366,7 @@ public class AIChamp {
             System.out.println(t2);
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
-                    state[i][j] = Integer.parseInt(sin.readLine());
+                    curState[i][j] = Integer.parseInt(sin.readLine());
                 }
             }
             sin.readLine();
@@ -359,7 +378,7 @@ public class AIChamp {
         System.out.println("Round: " + round);
         for (i = 7; i >= 0; i--) {
             for (j = 0; j < 8; j++) {
-                System.out.print(state[i][j]);
+                System.out.print(curState[i][j]);
             }
             System.out.println();
         }
@@ -367,7 +386,7 @@ public class AIChamp {
     }
 
     public void initClient(String host) {
-        int portNumber = 3333+me;
+        int portNumber = 3333 + me;
 
         try {
             s = new Socket(host, portNumber);
