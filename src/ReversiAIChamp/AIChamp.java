@@ -161,7 +161,7 @@ public class AIChamp {
         float maxchoice = Float.NEGATIVE_INFINITY;
 
         for (Integer m: validMoves) {
-            int[][] childState = getNewState(state, m, them-1);
+            int[][] childState = getNewState(state, m, me-1);
             float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
             if (childchoice > maxchoice) {
                 maxchoice = childchoice;
