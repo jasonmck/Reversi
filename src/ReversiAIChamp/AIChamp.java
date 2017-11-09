@@ -1,3 +1,5 @@
+package ReversiAIChamp;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -84,7 +86,31 @@ public class AIChamp {
         if (depth > MAXDEPTH || moves.size() == 0) {
             return heuristic(state, round);
         }
+        else {
+            float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+            PlayerType childtype = (type == PlayerType.MINIMIZER) ?
+                    PlayerType.MAXIMIZER : PlayerType.MINIMIZER;
+            for (Integer m: moves) {
+                int[][] newState = getNewState(state, m);
+                float childchoice = minimax(newState,
+                        round + 1, depth + 1, choice, childtype);
 
+                if ((choice > childchoice && type == PlayerType.MINIMIZER)
+                || (childchoice > choice && type == PlayerType.MAXIMIZER )) {
+                    choice = childchoice;
+                }
+
+                // Alpha/beta pruning branch
+                if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
+                || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
+                    return choice;
+                }
+            }
+            return choice;
+        }
+    }
+
+    private int[][] getNewState(int[][] state, int round) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
