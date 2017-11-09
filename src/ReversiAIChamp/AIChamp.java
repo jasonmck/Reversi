@@ -1,4 +1,3 @@
-package ReversiAIChamp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,8 +36,12 @@ public class AIChamp {
 
     public AIChamp(int _me, String host) {
         me = _me;
-        if (me == 1) { them = 2; }
-        if (me == 2) { them = 1; }
+        if (me == 1) {
+            them = 2;
+        }
+        if (me == 2) {
+            them = 1;
+        }
 
         initClient(host);
 
@@ -85,24 +88,25 @@ public class AIChamp {
 
         if (depth > MAXDEPTH || moves.size() == 0) {
             return heuristic(state, round);
-        }
-        else {
+        } else {
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
             PlayerType childtype = (type == PlayerType.MINIMIZER) ?
                     PlayerType.MAXIMIZER : PlayerType.MINIMIZER;
-            for (Integer m: moves) {
-                int[][] newState = getNewState(state, m);
+            for (Integer m : moves) {
+
+                int turn = (type == PlayerType.MINIMIZER) ? them : me;
+                int[][] newState = getNewState(state, m, turn - 1 );
                 float childchoice = minimax(newState,
                         round + 1, depth + 1, choice, childtype);
 
                 if ((choice > childchoice && type == PlayerType.MINIMIZER)
-                || (childchoice > choice && type == PlayerType.MAXIMIZER )) {
+                        || (childchoice > choice && type == PlayerType.MAXIMIZER)) {
                     choice = childchoice;
                 }
 
                 // Alpha/beta pruning branch
                 if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
-                || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
+                        || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
                     return choice;
                 }
             }
@@ -110,8 +114,12 @@ public class AIChamp {
         }
     }
 
-    private int[][] getNewState(int[][] state, int round) {
-        throw new UnsupportedOperationException("Not implemented");
+    private int[][] getNewState(int[][] state, int move, int turn) {
+
+        int row = move / 8;
+        int col = move % 8;
+        return changeColors(state, row, col, turn);
+
     }
 
     /**
@@ -123,12 +131,12 @@ public class AIChamp {
      */
     private float heuristic(int[][] state, int round) {
         int[] tileStateCount = new int[3];
-        for(int[] i : state) {
+        for (int[] i : state) {
             for (int j : i) {
                 tileStateCount[j]++;
             }
         }
-        return tileStateCount[me]/tileStateCount[them];
+        return tileStateCount[me] / tileStateCount[them];
     }
 
     // You should modify this function
@@ -256,10 +264,6 @@ public class AIChamp {
         }
 
         return false;
-    }
-
-    private int[][] getNewState(int state[][], int row, int col, int turn) {
-        return changeColors(state, row, col, turn);
     }
 
     public static int[][] changeColors(int[][] state, int row, int col, int turn) {
