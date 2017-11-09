@@ -102,7 +102,7 @@ public class AIChamp {
                 tileStateCount[j]++;
             }
         }
-        return tileStateCount[me]/tileStateCount[them];
+        return tileStateCount[me];
     }
 
     // You should modify this function
