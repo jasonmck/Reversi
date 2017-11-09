@@ -1,4 +1,3 @@
-package ReversiAIChamp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +14,7 @@ import java.util.Random;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 5;
+    static int MAXDEPTH = 0;
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
 
@@ -85,16 +84,21 @@ public class AIChamp {
 
         List<Integer> moves = getValidMoves(round, state);
 
+
         if (depth > MAXDEPTH || moves.size() == 0) {
             return heuristic(state, round);
         } else {
+            
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
             PlayerType childtype = (type == PlayerType.MINIMIZER) ?
                     PlayerType.MAXIMIZER : PlayerType.MINIMIZER;
+
             for (Integer m : moves) {
+                System.out.println("MOVE:" + m);
 
                 int turn = (type == PlayerType.MINIMIZER) ? them : me;
                 int[][] newState = getNewState(state, m, turn - 1 );
+
                 float childchoice = minimax(newState,
                         round + 1, depth + 1, choice, childtype);
 
@@ -106,9 +110,11 @@ public class AIChamp {
                 // Alpha/beta pruning branch
                 if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
                         || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
+                    System.out.println("My move: " + m + "choice: " + choice + " depth: " + depth + " type: " + type);
                     return choice;
                 }
             }
+            System.out.println( "choice: " + choice + "depth: " + depth + " type: " + type);
             return choice;
         }
     }
@@ -155,7 +161,8 @@ public class AIChamp {
         float maxchoice = Float.NEGATIVE_INFINITY;
 
         for (Integer m: validMoves) {
-            float childchoice = minimax(state, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
+            int[][] childState = getNewState(state, m, them-1);
+            float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
             if (childchoice > maxchoice) {
                 maxchoice = childchoice;
                 move = m;
@@ -195,7 +202,7 @@ public class AIChamp {
                     if (state[i][j] == 0) {
                         if (couldBe(state, i, j)) {
                             validMoves.add(i * 8 + j);
-                            System.out.println(i + ", " + j);
+                            System.out.println(i + ", " + j + "= " + ((i * 8) + j));
                         }
                     }
                 }
