@@ -54,11 +54,9 @@ public class AIChamp {
 
                 myMove = move(curState, round, validMoves);
 
-                //myMove = generator.nextInt(numValidMoves);        // select a move randomly
+                String sel = myMove / 8 + "\n" + myMove % 8;
 
-                String sel = validMoves.get(myMove) / 8 + "\n" + validMoves.get(myMove) % 8;
-
-                System.out.println("Selection: " + validMoves.get(myMove) / 8 + ", " + validMoves.get(myMove) % 8);
+                System.out.println("Selection: " + myMove / 8 + ", " + myMove % 8);
 
                 sout.println(sel);
             }
@@ -144,21 +142,19 @@ public class AIChamp {
      */
     private int move(int[][] state, int round, List<Integer> validMoves) {
         // just move randomly for now
-        int moveIdx = generator.nextInt(validMoves.size());
-        int maxchoice = Integer.MIN_VALUE;
+        int move = validMoves.get(generator.nextInt(validMoves.size()));
+        float maxchoice = Float.NEGATIVE_INFINITY;
 
-
-        for (int i = 0; i < validMoves.size(); i++) {
-            // Generate child states
-            int[][] childstate = state;
-            // Call minimax on child states
-            minimax(childstate, round, 0, maxchoice, PlayerType.MINIMIZER);
+        for (Integer m: validMoves) {
+            float childchoice = minimax(state, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
+            if (childchoice > maxchoice) {
+                maxchoice = childchoice;
+                move = m;
+            }
 
         }
 
-
-        throw new UnsupportedOperationException("Not implemented");
-        //return moveIdx;
+        return move;
     }
 
     // generates the set of valid moves for the player; returns a list of valid moves (validMoves)
