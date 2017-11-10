@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 0;
+    static int MAXDEPTH = -1;
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
 
@@ -81,23 +81,23 @@ public class AIChamp {
      * @return minimum/maximum child value if we are minimizer/maximizer
      */
     private float minimax(int[][] state, int round, int depth, float parentchoice, PlayerType type) {
-
+        System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
         List<Integer> moves = getValidMoves(round, state);
 
 
         if (depth > MAXDEPTH || moves.size() == 0) {
             return heuristic(state, round);
         } else {
-            
+
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
             PlayerType childtype = (type == PlayerType.MINIMIZER) ?
                     PlayerType.MAXIMIZER : PlayerType.MINIMIZER;
 
+            int mi = 0;
             for (Integer m : moves) {
-                System.out.println("MOVE:" + m);
 
                 int turn = (type == PlayerType.MINIMIZER) ? them : me;
-                int[][] newState = getNewState(state, m, turn - 1 );
+                int[][] newState = getNewState(state, m, turn - 1);
 
                 float childchoice = minimax(newState,
                         round + 1, depth + 1, choice, childtype);
@@ -105,26 +105,44 @@ public class AIChamp {
                 if ((choice > childchoice && type == PlayerType.MINIMIZER)
                         || (childchoice > choice && type == PlayerType.MAXIMIZER)) {
                     choice = childchoice;
+                    mi = m;
                 }
 
                 // Alpha/beta pruning branch
                 if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
                         || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
-                    System.out.println("My move: " + m + "choice: " + choice + " depth: " + depth + " type: " + type);
+                    System.out.println("My move{" +( m / 8) + ","  + (m % 8) + "} choice: " + choice + " depth: " + depth + " type: " + type);
                     return choice;
                 }
             }
-            System.out.println( "choice: " + choice + "depth: " + depth + " type: " + type);
+            System.out.println("My move{" +( mi / 8) + ","  + (mi % 8) + "}choice: " + choice + " depth: " + depth + " type: " + type);
             return choice;
         }
     }
 
     private int[][] getNewState(int[][] state, int move, int turn) {
 
+        int[][] newState =  new int[8][8];
+        for (int i = 7; i >= 0; i--) {
+            for (int j = 0; j < 8; j++) {
+                newState[i][j] = state[i][j];
+            }
+        }
+
+
         int row = move / 8;
         int col = move % 8;
-        return changeColors(state, row, col, turn);
+        newState = changeColors(newState, row, col, turn);
+//        System.out.println("CHILD Turn: " + turn);
+//        for (int i = 7; i >= 0; i--) {
+//            for (int j = 0; j < 8; j++) {
+//                System.out.print(" " + state[i][j] + "->" + newState[i][j]);
+//            }
+//            System.out.println();
+//        }
+//        System.out.println();
 
+        return newState;
     }
 
     /**
@@ -141,6 +159,10 @@ public class AIChamp {
                 tileStateCount[j]++;
             }
         }
+
+
+
+       // System.out.println("ROUND: " + round + " MY TILES: " + tileStateCount[me] + " THEIR TIIES: " + tileStateCount[them]);
         return tileStateCount[me];
     }
 
@@ -160,12 +182,16 @@ public class AIChamp {
         int move = validMoves.get(generator.nextInt(validMoves.size()));
         float maxchoice = Float.NEGATIVE_INFINITY;
 
-        for (Integer m: validMoves) {
-            int[][] childState = getNewState(state, m, them-1);
-            float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
+        for (Integer m : validMoves) {
+            int[][] childState = getNewState(state, m, me - 1);
+            float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MAXIMIZER);
+             //  System.out.println("CHILD CHOICE: " + childchoice);
+
             if (childchoice > maxchoice) {
                 maxchoice = childchoice;
                 move = m;
+              //  System.out.println("MY CHOICE: " + maxchoice + " MOVE{" +( move / 8) + ","  + (move % 8) + "}");
+
             }
 
         }
@@ -191,18 +217,18 @@ public class AIChamp {
             if (state[4][4] == 0) {
                 validMoves.add(4 * 8 + 4);
             }
-            System.out.println("Valid Moves:");
-            for (i = 0; i < validMoves.size(); i++) {
-                System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
-            }
+           // System.out.println("Valid Moves:");
+          //  for (i = 0; i < validMoves.size(); i++) {
+             //   System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
+           // }
         } else {
-            System.out.println("Valid Moves:");
+          //  System.out.println("Valid Moves:");
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {
                         if (couldBe(state, i, j)) {
                             validMoves.add(i * 8 + j);
-                            System.out.println(i + ", " + j + "= " + ((i * 8) + j));
+                           // System.out.println(i + ", " + j + "= " + ((i * 8) + j));
                         }
                     }
                 }
@@ -217,7 +243,6 @@ public class AIChamp {
         return validMoves;
 
     }
-
 
     /**
      * The original checkDirection from the client
@@ -272,6 +297,7 @@ public class AIChamp {
 
     public static int[][] changeColors(int[][] state, int row, int col, int turn) {
         int incx, incy;
+
 
         for (incx = -1; incx < 2; incx++) {
             for (incy = -1; incy < 2; incy++) {
