@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 30;
+    static int MAXDEPTH = 10;
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
 
@@ -81,7 +81,7 @@ public class AIChamp {
      * @return minimum/maximum child value if we are minimizer/maximizer
      */
     private float minimax(int[][] state, int round, int depth, float parentchoice, PlayerType type) {
-        System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
+        //System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
         List<Integer> moves = getValidMoves(round, state);
 
 
@@ -111,11 +111,11 @@ public class AIChamp {
                 // Alpha/beta pruning branch
                 if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
                         || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
-                    System.out.println("My move{" +( m / 8) + ","  + (m % 8) + "} choice: " + choice + " depth: " + depth + " type: " + type);
+                  //  System.out.println("My move{" +( m / 8) + ","  + (m % 8) + "} choice: " + choice + " depth: " + depth + " type: " + type);
                     return choice;
                 }
             }
-            System.out.println("My move{" +( mi / 8) + ","  + (mi % 8) + "}choice: " + choice + " depth: " + depth + " type: " + type);
+            //System.out.println("My move{" +( mi / 8) + ","  + (mi % 8) + "}choice: " + choice + " depth: " + depth + " type: " + type);
             return choice;
         }
     }
@@ -302,7 +302,8 @@ public class AIChamp {
         for (incx = -1; incx < 2; incx++) {
             for (incy = -1; incy < 2; incy++) {
                 if ((incx == 0) && (incy == 0))
-                    continue;
+                    state[row][col] = turn + 1;
+                    //continue;
 
                 state = checkDirection(state, row, col, incx, incy, turn);
             }
