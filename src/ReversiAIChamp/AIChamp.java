@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.time.*;
+
 
 /**
  * Created by Jason on 11/8/17.
@@ -15,6 +17,7 @@ import java.util.Random;
 public class AIChamp {
 
     static int MAXDEPTH = 10;
+    static int MAX_TURN_LENGTH = 5; // in seconds
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
 
@@ -30,6 +33,9 @@ public class AIChamp {
     int curState[][] = new int[8][8]; // state[0][0] is the bottom left corner of the board (on the GUI)
     int turn = -1;
     int round;
+
+
+    Instant current;
 
     //int validMoves[] = new int[64];
     //int numValidMoves;
@@ -55,7 +61,11 @@ public class AIChamp {
                 System.out.println("Move");
                 List<Integer> validMoves = getValidMoves(round, curState);
 
+
+                current = Instant.now();
                 myMove = move(curState, round, validMoves);
+
+
 
                 String sel = myMove / 8 + "\n" + myMove % 8;
 
@@ -85,7 +95,11 @@ public class AIChamp {
         List<Integer> moves = getValidMoves(round, state);
 
 
-        if (depth > MAXDEPTH || moves.size() == 0) {
+//        if (depth > MAXDEPTH || moves.size() == 0) {
+        Long duration = Duration.between(current, Instant.now()).toSeconds();
+//        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
+            if (MAXDEPTH < depth || moves.size() == 0) {
+        System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
             return heuristic(state, round);
         } else {
 
@@ -111,7 +125,7 @@ public class AIChamp {
                 // Alpha/beta pruning branch
                 if ((choice <= parentchoice && type == PlayerType.MINIMIZER)
                         || (parentchoice >= choice && type == PlayerType.MAXIMIZER)) {
-                  //  System.out.println("My move{" +( m / 8) + ","  + (m % 8) + "} choice: " + choice + " depth: " + depth + " type: " + type);
+                    //  System.out.println("My move{" +( m / 8) + ","  + (m % 8) + "} choice: " + choice + " depth: " + depth + " type: " + type);
                     return choice;
                 }
             }
@@ -122,7 +136,7 @@ public class AIChamp {
 
     private int[][] getNewState(int[][] state, int move, int turn) {
 
-        int[][] newState =  new int[8][8];
+        int[][] newState = new int[8][8];
         for (int i = 7; i >= 0; i--) {
             for (int j = 0; j < 8; j++) {
                 newState[i][j] = state[i][j];
@@ -161,8 +175,7 @@ public class AIChamp {
         }
 
 
-
-       // System.out.println("ROUND: " + round + " MY TILES: " + tileStateCount[me] + " THEIR TIIES: " + tileStateCount[them]);
+        // System.out.println("ROUND: " + round + " MY TILES: " + tileStateCount[me] + " THEIR TIIES: " + tileStateCount[them]);
         return tileStateCount[me];
     }
 
@@ -185,12 +198,12 @@ public class AIChamp {
         for (Integer m : validMoves) {
             int[][] childState = getNewState(state, m, me - 1);
             float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MAXIMIZER);
-             //  System.out.println("CHILD CHOICE: " + childchoice);
+            //  System.out.println("CHILD CHOICE: " + childchoice);
 
             if (childchoice > maxchoice) {
                 maxchoice = childchoice;
                 move = m;
-              //  System.out.println("MY CHOICE: " + maxchoice + " MOVE{" +( move / 8) + ","  + (move % 8) + "}");
+                //  System.out.println("MY CHOICE: " + maxchoice + " MOVE{" +( move / 8) + ","  + (move % 8) + "}");
 
             }
 
@@ -217,18 +230,18 @@ public class AIChamp {
             if (state[4][4] == 0) {
                 validMoves.add(4 * 8 + 4);
             }
-           // System.out.println("Valid Moves:");
-          //  for (i = 0; i < validMoves.size(); i++) {
-             //   System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
-           // }
+            // System.out.println("Valid Moves:");
+            //  for (i = 0; i < validMoves.size(); i++) {
+            //   System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
+            // }
         } else {
-          //  System.out.println("Valid Moves:");
+            //  System.out.println("Valid Moves:");
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {
                         if (couldBe(state, i, j)) {
                             validMoves.add(i * 8 + j);
-                           // System.out.println(i + ", " + j + "= " + ((i * 8) + j));
+                            // System.out.println(i + ", " + j + "= " + ((i * 8) + j));
                         }
                     }
                 }
@@ -303,7 +316,7 @@ public class AIChamp {
             for (incy = -1; incy < 2; incy++) {
                 if ((incx == 0) && (incy == 0))
                     state[row][col] = turn + 1;
-                    //continue;
+                //continue;
 
                 state = checkDirection(state, row, col, incx, incy, turn);
             }
@@ -437,13 +450,13 @@ public class AIChamp {
 
         System.out.println("Turn: " + turn);
         System.out.println("Round: " + round);
-        for (i = 7; i >= 0; i--) {
-            for (j = 0; j < 8; j++) {
-                System.out.print(curState[i][j]);
-            }
-            System.out.println();
-        }
-        System.out.println();
+//        for (i = 7; i >= 0; i--) {
+//            for (j = 0; j < 8; j++) {
+//                System.out.print(curState[i][j]);
+//            }
+//            System.out.println();
+//        }
+//        System.out.println();
     }
 
     public void initClient(String host) {
