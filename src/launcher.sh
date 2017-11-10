@@ -14,7 +14,7 @@ PID1=$!
 
 sleep 1s
 
-java -classpath ReversiRandom_Java RandomGuy $SERVER 1 /dev/null &
+java -classpath ReversiRandom_Java RandomGuy $SERVER 1 > /dev/null &
 PID2=$!
 
 sleep 1s
