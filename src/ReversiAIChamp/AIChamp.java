@@ -14,7 +14,7 @@ import java.util.Random;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 0;
+    static int MAXDEPTH = 30;
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
 
