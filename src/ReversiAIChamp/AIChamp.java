@@ -16,7 +16,11 @@ import java.time.*;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 7;
+     int MAXDEPTH = 7;
+     double MAX = -1;
+    static double MIN = .1;
+    static double MULT = 10;
+
     static int MAX_TURN_LENGTH = 5; // in seconds
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
@@ -57,8 +61,29 @@ public class AIChamp {
             System.out.println("Read");
             readMessage();
 
+
             if (turn == me) {
-                System.out.println("Move");
+
+                if (MAX == -1) {
+                    if (me==1) {
+                        MAX = t1;
+
+                    }else{
+                        MAX = t1;
+                    }
+                }else {
+
+                    if (me == 1) {
+                        MAXDEPTH = (int)(( t1 - MIN) / (MAX - MIN) * MULT);
+                    } else {
+                        MAXDEPTH = (int)(( t2 - MIN) / (MAX - MIN) * MULT);
+                    }
+
+                }
+
+
+
+                System.out.println("Move " + "MAXDEPTH: " + MAXDEPTH);
                 List<Integer> validMoves = getValidMoves(round, curState);
 
 
@@ -99,7 +124,7 @@ public class AIChamp {
         Long duration = Duration.between(current, Instant.now()).getSeconds();
 //        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
             if (MAXDEPTH < depth || moves.size() == 0) {
-        System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
+      //  System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
             return heuristic(state, round);
         } else {
 
@@ -447,7 +472,7 @@ public class AIChamp {
             //System.out.println("Turn: " + turn);
             round = Integer.parseInt(sin.readLine());
             t1 = Double.parseDouble(sin.readLine());
-            System.out.println(t1);
+          //  System.out.println(t1);
             t2 = Double.parseDouble(sin.readLine());
             System.out.println(t2);
             for (i = 0; i < 8; i++) {
@@ -460,8 +485,8 @@ public class AIChamp {
             System.err.println("Caught IOException: " + e.getMessage());
         }
 
-        System.out.println("Turn: " + turn);
-        System.out.println("Round: " + round);
+      //  System.out.println("Turn: " + turn);
+      //  System.out.println("Round: " + round);
 //        for (i = 7; i >= 0; i--) {
 //            for (j = 0; j < 8; j++) {
 //                System.out.print(curState[i][j]);
