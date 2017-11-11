@@ -195,6 +195,17 @@ public class AIChamp {
             {10, 0, 3, 5, 5, 3, 0, 10},
     };
 
+    static int[][] altPointmatrix = {
+        { 100,    8,   25,   22,   22,   25,    8,  100},
+        {   8,    0,   18,   18,   18,   18,    0,    8},
+        {  25,   18,   21,   20,   20,   21,   18,   25},
+        {  22,   18,   20,   18,   18,   20,   18,   22},
+        {  22,   18,   20,   18,   18,   20,   18,   22},
+        {  25,   18,   21,   20,   20,   21,   18,   25},
+        {   8,    0,   18,   18,   18,   18,    0,    8},
+        { 100,    8,   26,   22,   22,   26,    8,  100}
+    };
+
     /**
      * The evaluation of a state based on a heuristic
      *
@@ -204,16 +215,20 @@ public class AIChamp {
      */
     private float heuristic(int[][] state, int round) {
         int[] tileStateCount = new int[3];
-        int value = 0;
+        float value = 0;
+        float opvalue = 0;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (state[i][j] == me) {
-                    value += pointMatrix[i][j];
+                    value += altPointmatrix[i][j];
+                } else if (state[i][j] == them) {
+                    opvalue += pointMatrix[i][j];
                 }
             }
         }
         return value;
+        //return value - opvalue * 0.5f;
     }
 
     // You should modify this function
