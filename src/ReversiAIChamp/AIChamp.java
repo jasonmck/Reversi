@@ -16,7 +16,7 @@ import java.time.*;
  */
 public class AIChamp {
 
-    static int MAXDEPTH = 10;
+    static int MAXDEPTH = 7;
     static int MAX_TURN_LENGTH = 5; // in seconds
 
     enum PlayerType {MINIMIZER, MAXIMIZER}
@@ -96,7 +96,7 @@ public class AIChamp {
 
 
 //        if (depth > MAXDEPTH || moves.size() == 0) {
-        Long duration = Duration.between(current, Instant.now()).toSeconds();
+        Long duration = Duration.between(current, Instant.now()).getSeconds();
 //        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
             if (MAXDEPTH < depth || moves.size() == 0) {
         System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
@@ -159,6 +159,17 @@ public class AIChamp {
         return newState;
     }
 
+    static int[][] pointMatrix =  {
+            {10, 0, 3, 5, 5, 3, 0, 10},
+            { 0, 0, 1, 2, 2, 1, 0, 0 },
+            { 3, 1, 2, 2, 2, 2, 1, 3 },
+            { 5, 2, 2, 2, 2, 2, 2, 5 },
+            { 5, 2, 2, 2, 2, 2, 2, 5 },
+            { 3, 1, 2, 2, 2, 2, 1, 3 },
+            { 0, 0, 1, 2, 2, 1, 0, 0 },
+            {10, 0, 3, 5, 5, 3, 0, 10},
+    };
+
     /**
      * The evaluation of a state based on a heuristic
      *
@@ -168,15 +179,16 @@ public class AIChamp {
      */
     private float heuristic(int[][] state, int round) {
         int[] tileStateCount = new int[3];
-        for (int[] i : state) {
-            for (int j : i) {
-                tileStateCount[j]++;
+        int value = 0;
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (state[i][j] == me) {
+                    value += pointMatrix[i][j];
+                }
             }
         }
-
-
-        // System.out.println("ROUND: " + round + " MY TILES: " + tileStateCount[me] + " THEIR TIIES: " + tileStateCount[them]);
-        return tileStateCount[me];
+        return value;
     }
 
     // You should modify this function
