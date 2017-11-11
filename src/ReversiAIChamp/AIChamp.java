@@ -16,10 +16,10 @@ import java.time.*;
  */
 public class AIChamp {
 
-     int MAXDEPTH = 7;
+     int MAXDEPTH = 10;
      double MAX = -1;
     static double MIN = .1;
-    static double MULT = 10;
+    static double MULT = 8;
 
     static int MAX_TURN_LENGTH = 5; // in seconds
 
@@ -214,7 +214,6 @@ public class AIChamp {
      * @return
      */
     private float heuristic(int[][] state, int round) {
-        int[] tileStateCount = new int[3];
         float value = 0;
         float opvalue = 0;
 
@@ -227,7 +226,17 @@ public class AIChamp {
                 }
             }
         }
-        return value;
+
+        List<Integer> opmoves = getValidMoves(round, state);
+        float opmovesValue = 0; // the summed value of the possible opponents move
+        for (int move: opmoves) {
+            int row = move / 8;
+            int col = move % 8;
+
+            opmovesValue += altPointmatrix[row][col];
+        }
+
+        return value - opmovesValue;
         //return value - opvalue * 0.5f;
     }
 
