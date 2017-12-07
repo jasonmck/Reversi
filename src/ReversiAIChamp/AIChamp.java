@@ -16,7 +16,7 @@ import java.time.*;
  */
 public class AIChamp {
 
-     int MAXDEPTH = 10;
+     int MAXDEPTH = 4;
      double MAX = -1;
     static double MIN = .1;
     static double MULT = 8;
@@ -64,7 +64,7 @@ public class AIChamp {
 
             if (turn == me) {
 
-                if (MAX == -1) {
+                /*if (MAX == -1) {
                     if (me==1) {
                         MAX = t1;
 
@@ -79,7 +79,7 @@ public class AIChamp {
                         MAXDEPTH = (int)(( t2 - MIN) / (MAX - MIN) * MULT);
                     }
 
-                }
+                }*/
 
 
 
@@ -125,7 +125,7 @@ public class AIChamp {
 //        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
             if (MAXDEPTH < depth || moves.size() == 0) {
       //  System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
-            return heuristic(state, round);
+            return heuristic(state, round, moves);
         } else {
 
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
@@ -211,16 +211,29 @@ public class AIChamp {
      *
      * @param state the current state
      * @param round the round of the game
+     * @param validMoves
      * @return
      */
-    private float heuristic(int[][] state, int round) {
+    private float heuristic(int[][] state, int round, List<Integer> validMoves) {
         float value = 0;
         float opvalue = 0;
+        int myTiles = 0;
+        int emptyAdjTiles = 0;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (state[i][j] == me) {
                     value += altPointmatrix[i][j];
+                    myTiles++;
+                    for (int k = -1; k < 1; k++) {
+                        for (int l = -1; l < 1; l++) {
+                            if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
+                                if (state[i + l][j + k] == 0) {
+                                    emptyAdjTiles++;
+                                }
+                            }
+                        }
+                    }
                 } else if (state[i][j] == them) {
                     opvalue += pointMatrix[i][j];
                 }
