@@ -16,7 +16,7 @@ import java.time.*;
  */
 public class AIChamp {
 
-     int MAXDEPTH = 10;
+     int MAXDEPTH = 6;
      double MAX = -1;
     static double MIN = .1;
     static double MULT = 8;
@@ -64,7 +64,7 @@ public class AIChamp {
 
             if (turn == me) {
 
-                if (MAX == -1) {
+                /*if (MAX == -1) {
                     if (me==1) {
                         MAX = t1;
 
@@ -79,12 +79,12 @@ public class AIChamp {
                         MAXDEPTH = (int)(( t2 - MIN) / (MAX - MIN) * MULT);
                     }
 
-                }
+                }*/
 
 
 
                 System.out.println("Move " + "MAXDEPTH: " + MAXDEPTH);
-                List<Integer> validMoves = getValidMoves(round, curState);
+                List<Integer> validMoves = getValidMoves(round, curState, me);
 
 
                 current = Instant.now();
@@ -117,7 +117,8 @@ public class AIChamp {
      */
     private float minimax(int[][] state, int round, int depth, float parentchoice, PlayerType type) {
         //System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
-        List<Integer> moves = getValidMoves(round, state);
+
+        List<Integer> moves = getValidMoves(round, state, (type == PlayerType.MAXIMIZER) ? me : them);
 
 
 //        if (depth > MAXDEPTH || moves.size() == 0) {
@@ -125,7 +126,7 @@ public class AIChamp {
 //        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
             if (MAXDEPTH < depth || moves.size() == 0) {
       //  System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
-            return heuristic(state, round);
+            return heuristic(state, round, type);
         } else {
 
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
@@ -211,9 +212,10 @@ public class AIChamp {
      *
      * @param state the current state
      * @param round the round of the game
+     * @param type
      * @return
      */
-    private float heuristic(int[][] state, int round) {
+    private float heuristic(int[][] state, int round, PlayerType type) {
         float value = 0;
         float opvalue = 0;
 
@@ -227,7 +229,7 @@ public class AIChamp {
             }
         }
 
-        List<Integer> opmoves = getValidMoves(round, state);
+        /*List<Integer> opmoves = getValidMoves(round, state);
         float opmovesValue = 0; // the summed value of the possible opponents move
         for (int move: opmoves) {
             int row = move / 8;
@@ -235,8 +237,8 @@ public class AIChamp {
 
             opmovesValue += altPointmatrix[row][col];
         }
-
-        return value - opmovesValue;
+*/
+        return value;
         //return value - opvalue * 0.5f;
     }
 
@@ -318,6 +320,51 @@ public class AIChamp {
 
     }
 
+    // generates the set of valid moves for the player; returns a list of valid moves (validMoves)
+    List<Integer> getValidMoves(int round, int state[][], int player) {
+        List<Integer> validMoves = new ArrayList<>(64);
+        int i, j;
+
+        if (round < 4) {
+            if (state[3][3] == 0) {
+                validMoves.add(3 * 8 + 3);
+            }
+            if (state[3][4] == 0) {
+                validMoves.add(3 * 8 + 4);
+            }
+            if (state[4][3] == 0) {
+                validMoves.add(4 * 8 + 3);
+            }
+            if (state[4][4] == 0) {
+                validMoves.add(4 * 8 + 4);
+            }
+            // System.out.println("Valid Moves:");
+            //  for (i = 0; i < validMoves.size(); i++) {
+            //   System.out.println(validMoves.get(i / 8) + ", " + validMoves.get(i % 8));
+            // }
+        } else {
+            //  System.out.println("Valid Moves:");
+            for (i = 0; i < 8; i++) {
+                for (j = 0; j < 8; j++) {
+                    if (state[i][j] == 0) {
+                        if (couldBe(state, i, j, player)) {
+                            validMoves.add(i * 8 + j);
+                            // System.out.println(i + ", " + j + "= " + ((i * 8) + j));
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //if (round > 3) {
+        //    System.out.println("checking out");
+        //    System.exit(1);
+        //}
+        return validMoves;
+
+    }
+
     /**
      * The original checkDirection from the client
      *
@@ -348,6 +395,48 @@ public class AIChamp {
         int count = 0;
         for (i = 0; i < seqLen; i++) {
             if (me == 1) {
+                if (sequence[i] == 2)
+                    count++;
+                else {
+                    if ((sequence[i] == 1) && (count > 0))
+                        return true;
+                    break;
+                }
+            } else {
+                if (sequence[i] == 1)
+                    count++;
+                else {
+                    if ((sequence[i] == 2) && (count > 0))
+                        return true;
+                    break;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    private boolean checkDirection(int state[][], int row, int col, int incx, int incy, int player, boolean yes) {
+        int sequence[] = new int[7];
+        int seqLen;
+        int i, r, c;
+
+        seqLen = 0;
+        for (i = 1; i < 8; i++) {
+            r = row + incy * i;
+            c = col + incx * i;
+
+            if ((r < 0) || (r > 7) || (c < 0) || (c > 7))
+                break;
+
+            sequence[seqLen] = state[r][c];
+            seqLen++;
+        }
+
+        int count = 0;
+        for (i = 0; i < seqLen; i++) {
+            if (player == 1) {
                 if (sequence[i] == 2)
                     count++;
                 else {
@@ -469,6 +558,22 @@ public class AIChamp {
                     continue;
 
                 if (checkDirection(state, row, col, incx, incy))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean couldBe(int state[][], int row, int col, int player) {
+        int incx, incy;
+
+        for (incx = -1; incx < 2; incx++) {
+            for (incy = -1; incy < 2; incy++) {
+                if ((incx == 0) && (incy == 0))
+                    continue;
+
+                if (checkDirection(state, row, col, incx, incy, player, true))
                     return true;
             }
         }
