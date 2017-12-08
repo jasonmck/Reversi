@@ -79,7 +79,12 @@ public class AIChamp {
                         MAXDEPTH = (int)(( t2 - MIN) / (MAX - MIN) * MULT);
                     }
 
+<<<<<<< Updated upstream
                 }*/
+=======
+                }
+                MAXDEPTH = 9;
+>>>>>>> Stashed changes
 
 
 
@@ -118,6 +123,9 @@ public class AIChamp {
     private float minimax(int[][] state, int round, int depth, float parentchoice, PlayerType type) {
         //System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
         List<Integer> moves = getValidMoves(round, state);
+        if (round > 40) {
+            MAXDEPTH = 10;
+        }
 
 
 //        if (depth > MAXDEPTH || moves.size() == 0) {
@@ -196,14 +204,14 @@ public class AIChamp {
     };
 
     static int[][] altPointmatrix = {
-        { 100,    8,   25,   22,   22,   25,    8,  100},
+        { 300,    8,   25,   22,   22,   25,    8,  300},
         {   8,    0,   18,   18,   18,   18,    0,    8},
         {  25,   18,   21,   20,   20,   21,   18,   25},
         {  22,   18,   20,   18,   18,   20,   18,   22},
         {  22,   18,   20,   18,   18,   20,   18,   22},
         {  25,   18,   21,   20,   20,   21,   18,   25},
         {   8,    0,   18,   18,   18,   18,    0,    8},
-        { 100,    8,   26,   22,   22,   26,    8,  100}
+        { 300,    8,   26,   22,   22,   26,    8,  300}
     };
 
     /**
