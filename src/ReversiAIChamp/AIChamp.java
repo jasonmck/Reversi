@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.time.*;
@@ -16,7 +15,7 @@ import java.time.*;
  */
 public class AIChamp {
 
-     int MAXDEPTH = 4;
+     int MAXDEPTH = 6;
      double MAX = -1;
     static double MIN = .1;
     static double MULT = 8;
@@ -65,7 +64,7 @@ public class AIChamp {
             if (turn == me) {
 
                 System.out.println("Move " + "MAXDEPTH: " + MAXDEPTH);
-                List<Integer> validMoves = getValidMoves(round, curState);
+                List<Integer> validMoves = getValidMoves(round, curState, me); // Just use global me
 
 
                 current = Instant.now();
@@ -98,18 +97,15 @@ public class AIChamp {
      */
     private float minimax(int[][] state, int round, int depth, float parentchoice, PlayerType type) {
         //System.out.println("ROUND:" +  round + " DEPTH: " + depth +  " PARENTCOICE: " + parentchoice + " TYPE: " + type);
-        List<Integer> moves = getValidMoves(round, state);
-        if (round > 40) {
-            MAXDEPTH = 10;
-        }
-
+        int player = (round % 2) + 1;
+        List<Integer> moves = getValidMoves(round, state, player);
 
 //        if (depth > MAXDEPTH || moves.size() == 0) {
         Long duration = Duration.between(current, Instant.now()).getSeconds();
 //        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
             if (MAXDEPTH < depth || moves.size() == 0) {
       //  System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
-            return heuristic(state, round, moves);
+            return heuristic(state, round, moves, player);
         } else {
 
             float choice = (type == PlayerType.MINIMIZER) ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
@@ -179,7 +175,7 @@ public class AIChamp {
             {10, 0, 3, 5, 5, 3, 0, 10},
     };
 
-    static int[][] altPointmatrix = {
+    static int[][] altPointMatrix = {
         { 300,    8,   25,   22,   22,   25,    8,  300},
         {   8,    0,   18,   18,   18,   18,    0,    8},
         {  25,   18,   21,   20,   20,   21,   18,   25},
@@ -196,18 +192,27 @@ public class AIChamp {
      * @param state the current state
      * @param round the round of the game
      * @param validMoves
+     * @param player
      * @return
      */
-    private float heuristic(int[][] state, int round, List<Integer> validMoves) {
+    private float heuristic(int[][] state, int round, List<Integer> validMoves, int player) {
         float value = 0;
         float opvalue = 0;
         int myTiles = 0;
         int emptyAdjTiles = 0;
 
+        int[][] matrix;
+        if (round >= 40) {
+            matrix = pointMatrix;
+        }
+        else {
+            matrix = altPointMatrix;
+        }
+
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (state[i][j] == me) {
-                    value += altPointmatrix[i][j];
+                if (state[i][j] == player) {
+                    value += matrix[i][j];
                     myTiles++;
                     for (int k = -1; k < 1; k++) {
                         for (int l = -1; l < 1; l++) {
@@ -218,22 +223,24 @@ public class AIChamp {
                             }
                         }
                     }
-                } else if (state[i][j] == them) {
-                    opvalue += pointMatrix[i][j];
+                } else if (state[i][j] == ((player % 2) + 1)) {
+                    opvalue += matrix[i][j];
                 }
             }
         }
 
-        List<Integer> opmoves = getValidMoves(round, state);
+        //List<Integer> opmoves = getValidMoves(round, state, player);
         float opmovesValue = 0; // the summed value of the possible opponents move
-        for (int move: opmoves) {
+        for (int move: validMoves) {
             int row = move / 8;
             int col = move % 8;
 
-            opmovesValue += altPointmatrix[row][col];
+            opmovesValue += matrix[row][col];
         }
 
-        return value - opmovesValue;
+        //return value;
+        return value - opvalue;
+        //return value - opmovesValue;
         //return value - opvalue * 0.5f;
     }
 
@@ -254,8 +261,8 @@ public class AIChamp {
         float maxchoice = Float.NEGATIVE_INFINITY;
 
         for (Integer m : validMoves) {
-            int[][] childState = getNewState(state, m, me - 1);
-            float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MAXIMIZER);
+            int[][] childState = getNewState(state, m, me - 1); // We make a move and now it is our opponent's turn
+            float childchoice = minimax(childState, round + 1, 0, maxchoice, PlayerType.MINIMIZER);
             //  System.out.println("CHILD CHOICE: " + childchoice);
 
             if (childchoice > maxchoice) {
@@ -271,7 +278,7 @@ public class AIChamp {
     }
 
     // generates the set of valid moves for the player; returns a list of valid moves (validMoves)
-    List<Integer> getValidMoves(int round, int state[][]) {
+    List<Integer> getValidMoves(int round, int state[][], int player) {
         List<Integer> validMoves = new ArrayList<>(64);
         int i, j;
 
@@ -297,7 +304,7 @@ public class AIChamp {
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {
-                        if (couldBe(state, i, j)) {
+                        if (couldBe(state, i, j, player)) {
                             validMoves.add(i * 8 + j);
                             // System.out.println(i + ", " + j + "= " + ((i * 8) + j));
                         }
@@ -316,16 +323,17 @@ public class AIChamp {
     }
 
     /**
-     * The original checkDirection from the client
+     * The original checkDirection_mut from the client
      *
      * @param state
      * @param row
      * @param col
      * @param incx
      * @param incy
+     * @param player
      * @return
      */
-    private boolean checkDirection(int state[][], int row, int col, int incx, int incy) {
+    private boolean checkDirection(int state[][], int row, int col, int incx, int incy, int player) {
         int sequence[] = new int[7];
         int seqLen;
         int i, r, c;
@@ -344,7 +352,7 @@ public class AIChamp {
 
         int count = 0;
         for (i = 0; i < seqLen; i++) {
-            if (me == 1) {
+            if (player == 1) {
                 if (sequence[i] == 2)
                     count++;
                 else {
@@ -376,14 +384,14 @@ public class AIChamp {
                     state[row][col] = turn + 1;
                 //continue;
 
-                state = checkDirection(state, row, col, incx, incy, turn);
+                state = checkDirection_mut(state, row, col, incx, incy, turn);
             }
         }
         return state;
     }
 
     /**
-     * The checkDirection from the server. It will MODIFY the state.
+     * The checkDirection_mut from the server. It will MODIFY the state.
      *
      * @param state
      * @param row
@@ -392,7 +400,7 @@ public class AIChamp {
      * @param incy
      * @return
      */
-    public static int[][] checkDirection(int[][] state, int row, int col, int incx, int incy, int turn) {
+    public static int[][] checkDirection_mut(int[][] state, int row, int col, int incx, int incy, int turn) {
         int sequence[] = new int[7];
         int seqLen;
         int i, r, c;
@@ -457,7 +465,7 @@ public class AIChamp {
         return state;
     }
 
-    private boolean couldBe(int state[][], int row, int col) {
+    private boolean couldBe(int state[][], int row, int col, int player) {
         int incx, incy;
 
         for (incx = -1; incx < 2; incx++) {
@@ -465,7 +473,7 @@ public class AIChamp {
                 if ((incx == 0) && (incy == 0))
                     continue;
 
-                if (checkDirection(state, row, col, incx, incy))
+                if (checkDirection(state, row, col, incx, incy, player))
                     return true;
             }
         }
