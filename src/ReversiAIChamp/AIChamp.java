@@ -64,30 +64,6 @@ public class AIChamp {
 
             if (turn == me) {
 
-                /*if (MAX == -1) {
-                    if (me==1) {
-                        MAX = t1;
-
-                    }else{
-                        MAX = t1;
-                    }
-                }else {
-
-                    if (me == 1) {
-                        MAXDEPTH = (int)(( t1 - MIN) / (MAX - MIN) * MULT);
-                    } else {
-                        MAXDEPTH = (int)(( t2 - MIN) / (MAX - MIN) * MULT);
-                    }
-
-<<<<<<< Updated upstream
-                }*/
-=======
-                }
-                MAXDEPTH = 9;
->>>>>>> Stashed changes
-
-
-
                 System.out.println("Move " + "MAXDEPTH: " + MAXDEPTH);
                 List<Integer> validMoves = getValidMoves(round, curState);
 
