@@ -100,11 +100,8 @@ public class AIChamp {
         int player = (round % 2) + 1;
         List<Integer> moves = getValidMoves(round, state, player);
 
-//        if (depth > MAXDEPTH || moves.size() == 0) {
         Long duration = Duration.between(current, Instant.now()).getSeconds();
-//        if (MAXDEPTH < depth || duration > MAX_TURN_LENGTH|| moves.size() == 0) {
-            if (MAXDEPTH < depth || moves.size() == 0) {
-      //  System.out.println("DURATION: " + duration  + " DEPTH: " + depth);
+        if (MAXDEPTH < depth || moves.size() == 0) {
             return heuristic(state, round, moves, player);
         } else {
 
@@ -207,24 +204,26 @@ public class AIChamp {
         int emptyAdjTiles = 0;
 
         int[][] matrix = altPointMatrix;
-        int maxScore = altPointMax;
+        int maxScore = 0;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
+                maxScore += matrix[i][j];
+
                 if (state[i][j] == me) {
                     value += matrix[i][j];
                     myTiles++;
 
                     // Count up empty tiles around our pieces -- this is our opponants max possible moves
-                  //  for (int k = -1; k < 1; k++) {
-                  //      for (int l = -1; l < 1; l++) {
-                  //          if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
-                  //              if (state[i + l][j + k] == 0) {
-                  //                  emptyAdjTiles++;
-                  //              }
-                  //          }
-                  //      }
-                  //  }
+                    for (int k = -1; k < 1; k++) {
+                        for (int l = -1; l < 1; l++) {
+                            if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
+                                if (state[i + l][j + k] == 0) {
+                                    emptyAdjTiles++;
+                                }
+                            }
+                        }
+                    }
 
                 } else if (state[i][j] == them) {
                     opvalue += matrix[i][j];
@@ -235,6 +234,8 @@ public class AIChamp {
 
         // corner score = 0
         int blockBonus = 1;
+        int blockBonusMax = 14 * 4;
+        int cornerCount = 0;
         // for each corner:
         for (int c = 0; c < 4; c++){
             int i = corners[c][0];
@@ -242,6 +243,7 @@ public class AIChamp {
 
             // if corner is ours:
             if (state[i][j] == me){
+                cornerCount++;
                 // define incrementer i.e., -1 or 1
                 int iinc = (i == 0) ? 1 : -1;
                 int jinc = (j == 0) ? 1 : -1;
@@ -251,7 +253,7 @@ public class AIChamp {
                 // walk along both edges and count our contiguous pieces
                 for (int ii = i; ii < istop; ii += iinc){
                     if (state[ii][j] == me) {
-                        blockBonus += 20;
+                        blockBonus += 1;
                     }
                     else {
 
@@ -260,7 +262,7 @@ public class AIChamp {
                 }
                 for (int jj = j; jj < jstop; jj += jinc) {
                     if (state[i][jj] == me) {
-                        blockBonus += 20;
+                        blockBonus += 1;
                     }
                     else {
                         break;
@@ -270,10 +272,14 @@ public class AIChamp {
         }
 
 
-
-        //float normalizedTileCount = myTiles/64;
-        //float normalizedTileScore = value/maxScore;
-        //float normalizedMoveCount = validMoves.size()/(emptyAdjTiles + 0.000001f);
+         int opMoveCount = validMoves.size();
+        if (player == me) {
+            opMoveCount = getValidMoves(round, state, them).size();
+        }
+        float normalizedTileCount = myTiles/64;
+        float normalizedTileScore = value/maxScore;
+        float normalizedMoveCount = opMoveCount/(emptyAdjTiles + 0.000001f);
+        float normalizedBlockBonus = blockBonus/blockBonusMax;
         //return alpha * normalizedTileCount + beta * normalizedTileScore + gamma * normalizedMoveCount;
 
         if (round >= 62 && (myTiles > theirTiles)){
@@ -283,7 +289,18 @@ public class AIChamp {
            return myTiles - theirTiles;
         }
         else {
-            return (value * blockBonus) - opvalue;
+            float score;
+            if (cornerCount < 2) {
+                score = 10000 * normalizedTileScore;
+            }
+            else {
+                System.out.print("hi");
+                score = normalizedBlockBonus;
+            }
+            return score;
+            //return 100 * normalizedTileScore + 10 * (1 - normalizedMoveCount);
+            //return myTiles + cornerCount * 100;
+            //return (value + blockBonus) - opvalue;
             //return value - opvalue;
         }
         //return value - (-opvalue);
@@ -326,7 +343,6 @@ public class AIChamp {
             int i = corners[c][0];
             int j = corners[c][1];
 
-            // if corner is ours:
             if (state[i][j] != 0) {
                 int iinc = (i == 0) ? 1 : -1;
                 int jinc = (j == 0) ? 1 : -1;
