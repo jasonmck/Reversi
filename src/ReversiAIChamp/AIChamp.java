@@ -175,19 +175,23 @@ public class AIChamp {
             {10, 0, 3, 5, 5, 3, 0, 10},
     };
 
-    static int[][] altPointMatrix = {
+    int[][] altPointMatrix = {
         { 300,    8,   25,   22,   22,   25,    8,  300},
-        {   8,    0,   18,   18,   18,   18,    0,    8},
-        {  25,   18,   21,   20,   20,   21,   18,   25},
-        {  22,   18,   20,   18,   18,   20,   18,   22},
-        {  22,   18,   20,   18,   18,   20,   18,   22},
-        {  25,   18,   21,   20,   20,   21,   18,   25},
-        {   8,    0,   18,   18,   18,   18,    0,    8},
+        {   8,    0,   10,    8,    8,   10,    0,    8},
+        {  25,   10,    8,    8,    8,    8,   10,   25},
+        {  22,    8,    8,    8,    8,    8,    8,   22},
+        {  22,    8,    8,    8,    8,    8,    8,   22},
+        {  25,   10,    8,    8,    8,    8,   10,   25},
+        {   8,    0,   10,    8,    8,   10,    0,    8},
         { 300,    8,   26,   22,   22,   26,    8,  300}
     };
+    static int altPointMax = 2246;
+    static int[][] corners = {{0,0},{7,0},{0,7},{7,7}};
 
     /**
      * The evaluation of a state based on a heuristic
+     * It is not specific to the caller of heuristic (player 1 or 2) but
+     * to which is the maximizer!
      *
      * @param state the current state
      * @param round the round of the game
@@ -199,49 +203,91 @@ public class AIChamp {
         float value = 0;
         float opvalue = 0;
         int myTiles = 0;
+        int theirTiles = 0;
         int emptyAdjTiles = 0;
 
-        int[][] matrix;
-        if (round >= 40) {
-            matrix = pointMatrix;
-        }
-        else {
-            matrix = altPointMatrix;
-        }
+        int[][] matrix = altPointMatrix;
+        int maxScore = altPointMax;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (state[i][j] == player) {
+                if (state[i][j] == me) {
                     value += matrix[i][j];
                     myTiles++;
-                    for (int k = -1; k < 1; k++) {
-                        for (int l = -1; l < 1; l++) {
-                            if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
-                                if (state[i + l][j + k] == 0) {
-                                    emptyAdjTiles++;
-                                }
-                            }
-                        }
-                    }
-                } else if (state[i][j] == ((player % 2) + 1)) {
+
+                    // Count up empty tiles around our pieces -- this is our opponants max possible moves
+                  //  for (int k = -1; k < 1; k++) {
+                  //      for (int l = -1; l < 1; l++) {
+                  //          if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
+                  //              if (state[i + l][j + k] == 0) {
+                  //                  emptyAdjTiles++;
+                  //              }
+                  //          }
+                  //      }
+                  //  }
+
+                } else if (state[i][j] == them) {
                     opvalue += matrix[i][j];
+                    theirTiles++;
                 }
             }
         }
 
-        //List<Integer> opmoves = getValidMoves(round, state, player);
-        float opmovesValue = 0; // the summed value of the possible opponents move
-        for (int move: validMoves) {
-            int row = move / 8;
-            int col = move % 8;
+        // corner score = 0
+        int blockBonus = 1;
+        // for each corner:
+        for (int c = 0; c < 4; c++){
+            int i = corners[c][0];
+            int j = corners[c][1];
 
-            opmovesValue += matrix[row][col];
+            // if corner is ours:
+            if (state[i][j] == me){
+                // define incrementer i.e., -1 or 1
+                int iinc = (i == 0) ? 1 : -1;
+                int jinc = (j == 0) ? 1 : -1;
+                int istop = (i == 0) ? 8 : -1;
+                int jstop = (j == 0) ? 8 : -1;
+
+                // walk along both edges and count our contiguous pieces
+                for (int ii = i; ii < istop; ii += iinc){
+                    if (state[ii][j] == me) {
+                        blockBonus += 20;
+                    }
+                    else {
+
+                        break;
+                    }
+                }
+                for (int jj = j; jj < jstop; jj += jinc) {
+                    if (state[i][jj] == me) {
+                        blockBonus += 20;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
         }
 
-        //return value;
-        return value - opvalue;
-        //return value - opmovesValue;
-        //return value - opvalue * 0.5f;
+
+
+        //float normalizedTileCount = myTiles/64;
+        //float normalizedTileScore = value/maxScore;
+        //float normalizedMoveCount = validMoves.size()/(emptyAdjTiles + 0.000001f);
+        //return alpha * normalizedTileCount + beta * normalizedTileScore + gamma * normalizedMoveCount;
+
+        if (round >= 62 && (myTiles > theirTiles)){
+            return Float.POSITIVE_INFINITY;
+        }
+        else if (round >= 55) {
+           return myTiles - theirTiles;
+        }
+        else {
+            return (value * blockBonus) - opvalue;
+            //return value - opvalue;
+        }
+        //return value - (-opvalue);
+        //return value - opvalue;
     }
 
     // You should modify this function
@@ -257,8 +303,41 @@ public class AIChamp {
      */
     private int move(int[][] state, int round, List<Integer> validMoves) {
         // just move randomly for now
+        int[][] matrix = altPointMatrix;
         int move = validMoves.get(generator.nextInt(validMoves.size()));
         float maxchoice = Float.NEGATIVE_INFINITY;
+        if (round <= 34) {
+            MAXDEPTH = 5;
+        }
+        else if (round <= 44) {
+            MAXDEPTH = 6;
+        }
+        else if (round <= 54) {
+            MAXDEPTH = 7;
+        }
+        else { // case greater than 54
+            MAXDEPTH = 10;
+        }
+        System.out.println(">>> Descending to MAXDEPTH = " + MAXDEPTH);
+
+
+        //Adjust point matrix so we get the adjacent points to corners now
+        for (int c = 0; c < 4; c++) {
+            int i = corners[c][0];
+            int j = corners[c][1];
+
+            // if corner is ours:
+            if (state[i][j] != 0) {
+                int iinc = (i == 0) ? 1 : -1;
+                int jinc = (j == 0) ? 1 : -1;
+
+                matrix[i][j + jinc] = 20;
+                matrix[i + iinc][j] = 20;
+                matrix[i + iinc][j + jinc] = 20;
+            }
+        }
+
+
 
         for (Integer m : validMoves) {
             int[][] childState = getNewState(state, m, me - 1); // We make a move and now it is our opponent's turn
