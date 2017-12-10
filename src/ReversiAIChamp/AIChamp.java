@@ -173,14 +173,14 @@ public class AIChamp {
     };
 
     int[][] altPointMatrix = {
-        { 300,    8,   25,   22,   22,   25,    8,  300},
-        {   8,    0,   10,    8,    8,   10,    0,    8},
-        {  25,   10,    8,    8,    8,    8,   10,   25},
-        {  22,    8,    8,    8,    8,    8,    8,   22},
-        {  22,    8,    8,    8,    8,    8,    8,   22},
-        {  25,   10,    8,    8,    8,    8,   10,   25},
-        {   8,    0,   10,    8,    8,   10,    0,    8},
-        { 300,    8,   26,   22,   22,   26,    8,  300}
+        { 300,  -50,   25,   20,   20,   25,    -50,  300},
+        { -50, -100,    4,    4,    4,    4,   -100,  -50},
+        {  25,    4,   15,    4,    4,   15,      4,   25},
+        {  20,    4,    4,    4,    4,    4,      4,   20},
+        {  20,    4,    4,    4,    4,    4,      4,   20},
+        {  25,   10,   15,    4,    4,   15,      4,   25},
+        { -50, -100,    4,    4,    4,    4,   -100,  -50},
+        { 300,  -50,   25,   20,   20,   25,    -50,  300}
     };
     static int altPointMax = 2246;
     static int[][] corners = {{0,0},{7,0},{0,7},{7,7}};
@@ -202,10 +202,29 @@ public class AIChamp {
         int myTiles = 0;
         int theirTiles = 0;
         int emptyAdjTiles = 0;
+        int edgeCount = 0;
+
+        /*for (int i = 7; i >= 0; i--) {
+            for (int j = 0; j < 8; j++) {
+                System.out.print(state[i][j] + " ");
+
+            }
+            System.out.println();
+            System.out.println();
+        }
+
+        System.out.println();
+        System.out.println();
+        System.out.println();*/
 
         int[][] matrix = altPointMatrix;
         int maxScore = 0;
 
+        int[][] emptyTileMatrix = new int[8][];
+        for (int i = 0; i < 8; i++) {
+            int[] emptyTileRow = new int[8];
+            emptyTileMatrix[i] = emptyTileRow;
+        }
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 maxScore += matrix[i][j];
@@ -213,13 +232,17 @@ public class AIChamp {
                 if (state[i][j] == me) {
                     value += matrix[i][j];
                     myTiles++;
+                    if (i == 0 || i == 7 || j == 0 || j == 7) {
+                        edgeCount++;
+                    }
 
                     // Count up empty tiles around our pieces -- this is our opponants max possible moves
-                    for (int k = -1; k < 1; k++) {
-                        for (int l = -1; l < 1; l++) {
-                            if (i + l >= 0 && i + l <= 8 && j + k >= 0 && j + k <= 8) {
-                                if (state[i + l][j + k] == 0) {
+                    for (int k = -1; k <= 1; k++) {
+                        for (int l = -1; l <= 1; l++) {
+                            if (i + k >= 0 && i + k <= 7 && j + l >= 0 && j + l <= 7) {
+                                if (state[i + k][j + l] == 0 && emptyTileMatrix[i + k][j + l] == 0) {
                                     emptyAdjTiles++;
+                                    emptyTileMatrix[i + k][j + l] = 1;
                                 }
                             }
                         }
@@ -272,32 +295,48 @@ public class AIChamp {
         }
 
 
-         int opMoveCount = validMoves.size();
+        int opMoveCount = validMoves.size();
         if (player == me) {
             opMoveCount = getValidMoves(round, state, them).size();
         }
-        float normalizedTileCount = myTiles/64;
+        float normalizedTileCount = myTiles/64f;
         float normalizedTileScore = value/maxScore;
         float normalizedMoveCount = opMoveCount/(emptyAdjTiles + 0.000001f);
         float normalizedBlockBonus = blockBonus/blockBonusMax;
+        float normalizedEdgeCount = edgeCount/28f;
         //return alpha * normalizedTileCount + beta * normalizedTileScore + gamma * normalizedMoveCount;
 
-        if (round >= 62 && (myTiles > theirTiles)){
+
+        if (cornerCount >= 1) { //Try to get the
+            return normalizedEdgeCount * .8f + normalizedTileCount * .5f + cornerCount * 2;
+        }
+        if (round < 55) {
+            return normalizedTileScore * .7f + cornerCount * 2;
+            //return (1 - normalizedMoveCount) * .1f + (normalizedTileScore) * .9f;
+        }
+        else if (round >= 62 && (myTiles > theirTiles)){
             return Float.POSITIVE_INFINITY;
         }
+
         else if (round >= 55) {
+            System.out.println("normalizedEdgeCount: " + normalizedEdgeCount);
+            System.out.println("normalizedTileScore:" + normalizedTileScore);
+            System.out.println("normalizedtileCount: " + normalizedTileCount);
            return myTiles - theirTiles;
         }
         else {
-            float score;
+            return (1 - normalizedMoveCount) * .1f + (normalizedTileScore) * .9f;
+            /*float score;
             if (cornerCount < 2) {
                 score = 10000 * normalizedTileScore;
             }
             else {
                 System.out.print("hi");
                 score = normalizedBlockBonus;
-            }
-            return score;
+            }*/
+
+            //float score = value;
+
             //return 100 * normalizedTileScore + 10 * (1 - normalizedMoveCount);
             //return myTiles + cornerCount * 100;
             //return (value + blockBonus) - opvalue;
@@ -323,16 +362,10 @@ public class AIChamp {
         int[][] matrix = altPointMatrix;
         int move = validMoves.get(generator.nextInt(validMoves.size()));
         float maxchoice = Float.NEGATIVE_INFINITY;
-        if (round <= 34) {
-            MAXDEPTH = 5;
-        }
-        else if (round <= 44) {
-            MAXDEPTH = 6;
-        }
-        else if (round <= 54) {
-            MAXDEPTH = 7;
-        }
-        else { // case greater than 54
+
+
+
+        if (round > 55) { // case greater than 54
             MAXDEPTH = 10;
         }
         System.out.println(">>> Descending to MAXDEPTH = " + MAXDEPTH);
