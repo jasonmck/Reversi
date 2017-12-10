@@ -15,7 +15,7 @@ import java.time.*;
  */
 public class AIChamp {
 
-     int MAXDEPTH = 6;
+     int MAXDEPTH = 4;
      double MAX = -1;
     static double MIN = .1;
     static double MULT = 8;
@@ -306,42 +306,32 @@ public class AIChamp {
         float normalizedEdgeCount = edgeCount/28f;
         //return alpha * normalizedTileCount + beta * normalizedTileScore + gamma * normalizedMoveCount;
 
+        //IDEAS: When an opportunity to take a corner presents itself, take it. make base case
+        //IDEAS: Figure out how to push out from a corner on the edges adjacent
+        //IDEAS: MAKE PIECES NEXT TO CORNER PIECES GOOD MOVES IF YOU OWN THE CORNER PIECE
 
-        if (cornerCount >= 1) { //Try to get the
-            return normalizedEdgeCount * .8f + normalizedTileCount * .5f + cornerCount * 2;
-        }
-        if (round < 55) {
-            return normalizedTileScore * .7f + cornerCount * 2;
-            //return (1 - normalizedMoveCount) * .1f + (normalizedTileScore) * .9f;
-        }
-        else if (round >= 62 && (myTiles > theirTiles)){
+        if (round >= 62 && (myTiles > theirTiles)){
             return Float.POSITIVE_INFINITY;
         }
 
-        else if (round >= 55) {
-            System.out.println("normalizedEdgeCount: " + normalizedEdgeCount);
-            System.out.println("normalizedTileScore:" + normalizedTileScore);
-            System.out.println("normalizedtileCount: " + normalizedTileCount);
-           return myTiles - theirTiles;
+        if (cornerCount == 0 && round > 40) {
+            return normalizedTileScore * .7f + cornerCount * 2 + normalizedEdgeCount * .9f;
         }
+
+        else if (cornerCount == 0) {
+            return normalizedTileScore * 1.5f + cornerCount * 2 + normalizedMoveCount * .05f;
+            //return (1 - normalizedMoveCount) * .1f + (normalizedTileScore) * .9f;
+        }
+
+        else if (cornerCount == 1){ //Try to figure out how to push out from corner
+            return normalizedEdgeCount * .8f + normalizedTileScore * .8f + normalizedTileCount * .3f;
+        }
+
         else {
-            return (1 - normalizedMoveCount) * .1f + (normalizedTileScore) * .9f;
-            /*float score;
-            if (cornerCount < 2) {
-                score = 10000 * normalizedTileScore;
-            }
-            else {
-                System.out.print("hi");
-                score = normalizedBlockBonus;
-            }*/
-
-            //float score = value;
-
-            //return 100 * normalizedTileScore + 10 * (1 - normalizedMoveCount);
-            //return myTiles + cornerCount * 100;
-            //return (value + blockBonus) - opvalue;
-            //return value - opvalue;
+            return normalizedEdgeCount * .8f + normalizedTileCount * .3f;
+            //return myTiles - theirTiles;
         }
+
         //return value - (-opvalue);
         //return value - opvalue;
     }
