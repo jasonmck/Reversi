@@ -109,6 +109,8 @@ public class AIChamp {
             PlayerType childtype = (type == PlayerType.MINIMIZER) ?
                     PlayerType.MAXIMIZER : PlayerType.MINIMIZER;
 
+            // we also need to check if the other player has no valid moves. IF so then we have two maximizers or minimizers in a row
+
             int mi = 0;
             for (Integer m : moves) {
 
@@ -173,14 +175,14 @@ public class AIChamp {
     };
 
     int[][] altPointMatrix = {
-        { 300,    8,   25,   22,   22,   25,    8,  300},
-        {   8,    0,   10,    8,    8,   10,    0,    8},
+        { 300,    0,   25,   22,   22,   25,    0,  300},
+        {   0,   -8,   10,    8,    8,   10,   -8,    0},
         {  25,   10,    8,    8,    8,    8,   10,   25},
         {  22,    8,    8,    8,    8,    8,    8,   22},
         {  22,    8,    8,    8,    8,    8,    8,   22},
         {  25,   10,    8,    8,    8,    8,   10,   25},
-        {   8,    0,   10,    8,    8,   10,    0,    8},
-        { 300,    8,   26,   22,   22,   26,    8,  300}
+        {   0,   -8,   10,    8,    8,   10,   -8,    0},
+        { 300,    0,   26,   22,   22,   26,    0,  300}
     };
     static int altPointMax = 2246;
     static int[][] corners = {{0,0},{7,0},{0,7},{7,7}};
@@ -282,10 +284,10 @@ public class AIChamp {
         float normalizedBlockBonus = blockBonus/blockBonusMax;
         //return alpha * normalizedTileCount + beta * normalizedTileScore + gamma * normalizedMoveCount;
 
-        if (round >= 62 && (myTiles > theirTiles)){
+        if (round >= 62 && (myTiles > theirTiles) ){ // also need to check if both players have no valid moves
             return Float.POSITIVE_INFINITY;
         }
-        else if (round >= 55) {
+        else if (round >= 55) { // game may end early: in which case we will compare WILDLY different values
            return myTiles - theirTiles;
         }
         else {
